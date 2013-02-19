@@ -7,7 +7,7 @@ import           Control.Monad
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Default
-import qualified Language.Fay        as F
+import qualified Fay        as F
 import           System.Directory
 import           System.FilePath
 
@@ -34,6 +34,12 @@ destDir = (</> "js") . snapletFilePath
 includeDirs :: Fay -> [FilePath]
 includeDirs config = srcDir config : _includeDirs config
 
+addConfigPackages :: [String] -> F.CompileConfig -> F.CompileConfig
+addConfigPackages ps cfg = cfg { F.configPackages = ps ++ F.configPackages cfg }
+
+addConfigDirectoryIncludes :: [FilePath] -> F.CompileConfig -> F.CompileConfig
+addConfigDirectoryIncludes ds cfg = cfg { F.configDirectoryIncludes = map ((,) Nothing) ds ++ F.configDirectoryIncludes cfg }
+
 -- | Compile on every request or when Snap starts.
 data CompileMode = Development | Production
   deriving (Eq, Show)
@@ -53,14 +59,14 @@ compileFile config f = do
     else do
       print config
       putStrLn ""
-      let cfg' = F.addConfigPackages (packages config) $ F.addConfigDirectoryIncludes (includeDirs config) $ def { F.configPrettyPrint = prettyPrint config }
+      let cfg' = addConfigPackages (packages config) $ addConfigDirectoryIncludes (includeDirs config) $ def { F.configPrettyPrint = prettyPrint config }
       print cfg'
       putStrLn ""
       f' <- canonicalizePath f
       print f'
       putStrLn ""
-      res <- flip F.compileFile f' $ F.addConfigPackages (packages config) $
-                                      F.addConfigDirectoryIncludes (includeDirs config) $
+      res <- flip F.compileFile f' $ addConfigPackages (packages config) $
+                                      addConfigDirectoryIncludes (includeDirs config) $
                                         def { F.configPrettyPrint = prettyPrint config
                                             , F.configFilePath = Just f'
                                             }
