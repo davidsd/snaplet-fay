@@ -65,11 +65,11 @@ compileFile config f = do
       f' <- canonicalizePath f
       print f'
       putStrLn ""
-      res <- flip F.compileFile f' $ addConfigPackages (packages config) $
-                                      addConfigDirectoryIncludes (includeDirs config) $
-                                        def { F.configPrettyPrint = prettyPrint config
-                                            , F.configFilePath = Just f'
-                                            }
+      res <- flip F.compileFile f' cfg' -- $ addConfigPackages (packages config) $
+                                     -- addConfigDirectoryIncludes (includeDirs config) $
+                                       -- def { F.configPrettyPrint = prettyPrint config
+                                         --   , F.configFilePath = Just f'
+                                           -- }
       case res of
         Right out -> do
           verbosePut config $ "Compiled " ++ hsRelativePath f
